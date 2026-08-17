@@ -1,0 +1,1059 @@
+<!doctype html>
+<html lang="zh-Hans">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <title>予 吉书赐 · 漫天星河皆是情书 | Taubin Heart 3D</title>
+        <style>
+            /* ================== 全局样式重置 ================== */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                background: #030006;
+                overflow: hidden;
+                touch-action: none;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            }
+
+            canvas {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+
+            /* ================== UI 信息层 ================== */
+            .info {
+                position: fixed;
+                top: 24px;
+                left: 50%;
+                transform: translateX(-50%);
+                text-align: center;
+                pointer-events: none;
+                z-index: 100;
+                user-select: none;
+                width: 90%;
+                max-width: 750px;
+            }
+
+            .info h1 {
+                font-size: 24px;
+                font-weight: 300;
+                letter-spacing: 5px;
+                margin-bottom: 6px;
+                color: #ffd6e0;
+                text-shadow: 0 0 18px rgba(255, 143, 163, 0.7), 0 0 35px rgba(255, 107, 138, 0.4);
+            }
+
+            .name-highlight {
+                color: #ffffff;
+                font-weight: 400;
+                letter-spacing: 4px;
+                display: inline-block;
+                padding: 0 4px;
+                text-shadow: 0 0 12px #ff8fa3, 0 0 24px #ff6b8a, 0 0 36px #ffffff;
+            }
+
+            .info .subtitle {
+                font-size: 13px;
+                letter-spacing: 3px;
+                color: #ff8fa3;
+                opacity: 0.85;
+                margin-bottom: 8px;
+            }
+
+            .info .equation {
+                font-size: 11px;
+                color: #ffb6c1;
+                opacity: 0.55;
+                font-family: "Courier New", Courier, monospace;
+                line-height: 1.6;
+                text-shadow: 0 0 8px rgba(255, 182, 193, 0.3);
+            }
+
+            .controls-hint {
+                position: fixed;
+                bottom: 22px;
+                left: 50%;
+                transform: translateX(-50%);
+                color: #ff8fa3;
+                font-size: 11px;
+                opacity: 0.5;
+                pointer-events: none;
+                letter-spacing: 2px;
+                z-index: 100;
+                text-align: center;
+                user-select: none;
+            }
+
+            /* ================== Loading 加载遮罩层 ================== */
+            .loader-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: #05000a;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                transition:
+                    opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1),
+                    visibility 0.9s;
+            }
+
+            .loader-overlay.hidden {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
+
+            /* CSS 动态背景：静态星空容器 */
+            .stars-container {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            .star {
+                position: absolute;
+                border-radius: 50%;
+                animation: twinkle var(--duration) ease-in-out infinite alternate;
+            }
+
+            @keyframes twinkle {
+                0% {
+                    opacity: 0.2;
+                    transform: scale(0.8);
+                }
+                100% {
+                    opacity: 1;
+                    transform: scale(1.2);
+                    filter: brightness(1.5);
+                }
+            }
+
+            /* CSS 动态背景：中央星系轨道动画 */
+            .galaxy {
+                position: relative;
+                width: 200px;
+                height: 200px;
+                z-index: 10;
+            }
+
+            .orbit {
+                position: absolute;
+                border-radius: 50%;
+                border: 1px solid transparent;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            .orbit-1 {
+                width: 65px;
+                height: 65px;
+                border-color: rgba(255, 143, 163, 0.35);
+                animation: spin 2.2s linear infinite;
+            }
+
+            .orbit-2 {
+                width: 125px;
+                height: 125px;
+                border-color: rgba(255, 214, 224, 0.3);
+                animation: spin 3.5s linear infinite reverse;
+            }
+
+            .orbit-3 {
+                width: 185px;
+                height: 185px;
+                border-color: rgba(170, 221, 255, 0.2);
+                animation: spin 4.8s linear infinite;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: translate(-50%, -50%) rotate(0deg);
+                }
+                100% {
+                    transform: translate(-50%, -50%) rotate(360deg);
+                }
+            }
+
+            .planet {
+                position: absolute;
+                border-radius: 50%;
+                box-shadow:
+                    0 0 15px currentColor,
+                    0 0 30px currentColor;
+            }
+
+            .planet-1 {
+                width: 10px;
+                height: 10px;
+                background: #ff8fa3;
+                color: #ff8fa3;
+                top: -5px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .planet-2 {
+                width: 8px;
+                height: 8px;
+                background: #ffd6e0;
+                color: #ffd6e0;
+                top: -4px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .planet-3 {
+                width: 6px;
+                height: 6px;
+                background: #aaddff;
+                color: #aaddff;
+                top: -3px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .sun {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                background: radial-gradient(
+                    circle,
+                    #ffffff 0%,
+                    #ffd1dc 45%,
+                    #ff6b8a 80%,
+                    transparent 100%
+                );
+                box-shadow:
+                    0 0 25px #ff8fa3,
+                    0 0 50px #ff6b8a,
+                    0 0 85px rgba(255, 143, 163, 0.6);
+                animation: pulse 1.6s ease-in-out infinite alternate;
+            }
+
+            @keyframes pulse {
+                0% {
+                    transform: translate(-50%, -50%) scale(0.95);
+                    opacity: 0.85;
+                }
+                100% {
+                    transform: translate(-50%, -50%) scale(1.25);
+                    opacity: 1;
+                }
+            }
+
+            /* CSS 动态背景：流星效果 */
+            .meteor {
+                position: absolute;
+                width: 110px;
+                height: 2px;
+                background: linear-gradient(90deg, transparent, #ff8fa3, #ffffff, transparent);
+                border-radius: 50%;
+                opacity: 0;
+                animation: shoot var(--shoot-duration) linear infinite;
+                animation-delay: var(--shoot-delay);
+            }
+
+            @keyframes shoot {
+                0% {
+                    transform: translateX(-100px) translateY(-100px) rotate(-45deg);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 1;
+                }
+                90% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateX(400px) translateY(400px) rotate(-45deg);
+                    opacity: 0;
+                }
+            }
+
+            .loading-text {
+                margin-top: 60px;
+                color: #ffd6e0;
+                font-size: 15px;
+                letter-spacing: 8px;
+                text-transform: uppercase;
+                animation: textGlow 2s ease-in-out infinite alternate;
+            }
+
+            @keyframes textGlow {
+                0% {
+                    text-shadow:
+                        0 0 6px #ff8fa3,
+                        0 0 12px rgba(255, 143, 163, 0.5);
+                    opacity: 0.65;
+                }
+                100% {
+                    text-shadow:
+                        0 0 12px #ffd6e0,
+                        0 0 24px rgba(255, 143, 163, 0.9),
+                        0 0 36px rgba(255, 107, 138, 0.5);
+                    opacity: 1;
+                }
+            }
+
+            /* CSS 动态背景：星云模糊效果 */
+            .nebula {
+                position: absolute;
+                border-radius: 50%;
+                filter: blur(70px);
+                opacity: 0.18;
+                animation: nebulaFloat 9s ease-in-out infinite alternate;
+            }
+
+            .nebula-1 {
+                width: 320px;
+                height: 320px;
+                background: #ff6b8a;
+                top: 20%;
+                left: 18%;
+            }
+
+            .nebula-2 {
+                width: 280px;
+                height: 280px;
+                background: #aaddff;
+                bottom: 18%;
+                right: 18%;
+                animation-delay: -4.5s;
+            }
+
+            @keyframes nebulaFloat {
+                0% {
+                    transform: translate(0, 0) scale(1);
+                }
+                100% {
+                    transform: translate(35px, -35px) scale(1.12);
+                }
+            }
+        </style>
+        <!-- Three.js 模块导入映射配置 -->
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+                }
+            }
+        </script>
+    </head>
+
+    <body>
+        <!-- Loading 界面结构 -->
+        <div class="loader-overlay" id="loader">
+            <div class="nebula nebula-1"></div>
+            <div class="nebula nebula-2"></div>
+            <div class="stars-container" id="stars"></div>
+            <div
+                class="meteor"
+                style="--shoot-duration: 3s; --shoot-delay: 0s; top: 12%; left: 10%"
+            ></div>
+            <div
+                class="meteor"
+                style="--shoot-duration: 4s; --shoot-delay: 1.5s; top: 32%; left: 62%"
+            ></div>
+            <div
+                class="meteor"
+                style="--shoot-duration: 3.5s; --shoot-delay: 2.2s; top: 52%; left: 22%"
+            ></div>
+            <div class="galaxy">
+                <div class="sun"></div>
+                <div class="orbit orbit-1">
+                    <div class="planet planet-1"></div>
+                </div>
+                <div class="orbit orbit-2">
+                    <div class="planet planet-2"></div>
+                </div>
+                <div class="orbit orbit-3">
+                    <div class="planet planet-3"></div>
+                </div>
+            </div>
+            <div class="loading-text">Loading Universe for 吉书赐</div>
+        </div>
+
+        <!-- 顶部信息展示 -->
+        <div class="info">
+            <h1>❤ 予 <span class="name-highlight">吉书赐</span> · 漫天星河皆是情书 ❤</h1>
+            <div class="subtitle">“世间良吉，尺素成书，你是我收到最好的馈赐。”</div>
+            <div class="equation">
+                (r² - 1)³ = r⁵ · cos³θ · sin²θ · (cos²φ + 0.1 · sin²φ)<br>
+                在三维坐标与千万星尘里，计算一次只为你跳动的脉搏。
+            </div>
+        </div>
+
+        <div class="controls-hint">🖱 拖拽旋转 · 滚轮缩放 · 右键平移 / 触摸缩放拖拽</div>
+
+        <script type="module">
+            import * as THREE from "three";
+            import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+            // ================== 1. 核心配置与设备适配 ==================
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                navigator.userAgent,
+            );
+
+            const CONFIG = {
+                // 心形曲面细分网格参数
+                heartTheta: isMobile ? 120 : 200,
+                heartPhi: isMobile ? 120 : 200,
+                heartScale: 520.0, // 场景缩放系数，使心形与深空坐标系匹配
+
+                // 粒子数量
+                starCount: isMobile ? 8000 : 20000,     // 背景星空粒子数
+                dustCount: isMobile ? 600 : 1500,       // 环绕心形的浮游星尘数
+
+                // 动画脉冲参数
+                pulseSpeed: 2.6,   // 心跳速率
+                pulseAmp: 0.11,    // 脉冲收缩扩张幅度
+                baseHeartSize: 4.8,// 基础粒子大小
+
+                // 色彩方案
+                colors: {
+                    background: 0x030006,
+                    bgParticle: 0xff8fa3,
+                    dustColor: 0xffd1dc,
+                    star1: 0xaaddff,
+                    star2: 0xffd6e0,
+                    star3: 0xffffff,
+                },
+
+                // 空间范围
+                bgRadiusMin: 2200,
+                bgRadiusMax: 6000,
+                pixelRatioLimit: isMobile ? 1.5 : 2,
+            };
+
+            // ================== 2. GLSL 着色器定义 ==================
+
+            /**
+             * [Vertex Shader] 3D 数学心形顶点着色器
+             * 实现：全局心跳主波 + 局部相位异步扰动 + 透视投影尺寸校正
+             */
+            const heartVertexShader = `
+                uniform float uTime;
+                uniform float uPulseSpeed;
+                uniform float uPulseAmp;
+                uniform float uBaseSize;
+                uniform float uPixelRatio;
+
+                attribute vec3 aColor;
+                attribute float aPhase;
+                attribute float aSize;
+
+                varying vec3 vColor;
+                varying float vAlpha;
+                varying float vDist;
+                varying float vGlow;
+
+                void main() {
+                    vColor = aColor;
+                    vAlpha = 1.0;
+
+                    // 复合心跳律动：正弦主节拍 + 二次谐波模拟心房心室连续起伏
+                    float t = uTime * uPulseSpeed;
+                    float primaryBeat = sin(t + aPhase * 0.25);
+                    float secondaryBeat = sin(t * 2.0 + aPhase * 0.25) * 0.35;
+                    float pulse = 1.0 + uPulseAmp * (primaryBeat + secondaryBeat);
+
+                    vGlow = pulse;
+
+                    // 坐标沿法向脉冲扩张
+                    vec3 newPos = position * pulse;
+                    vec4 mvPosition = modelViewMatrix * vec4(newPos, 1.0);
+                    gl_Position = projectionMatrix * mvPosition;
+
+                    vDist = max(-mvPosition.z, 1.0);
+                    // 透视校正点大小
+                    float perspective = 1600.0 / vDist;
+                    gl_PointSize = clamp(uBaseSize * aSize * pulse * perspective * uPixelRatio, 1.2, 35.0);
+                }
+            `;
+
+            /**
+             * [Fragment Shader] 心形粒子专属片元着色器
+             * 实现：圆形裁剪 + 亮斑热白核心 + 柔和光晕晕轮 + 十字微星芒 + 景深雾化
+             */
+            const heartFragmentShader = `
+                precision highp float;
+                varying vec3 vColor;
+                varying float vAlpha;
+                varying float vDist;
+                varying float vGlow;
+
+                void main() {
+                    vec2 coord = gl_PointCoord - vec2(0.5);
+                    float dist = length(coord);
+                    if (dist > 0.5) discard;
+
+                    // 高亮中心核心亮斑
+                    float core = 1.0 - smoothstep(0.0, 0.15, dist);
+                    // 柔和外发光晕
+                    float glow = pow(1.0 - smoothstep(0.0, 0.48, dist), 2.2);
+
+                    // 粒子中心十字微星芒，提升晶莹剔透质感
+                    float crossWidth = 0.035;
+                    float xMask = 1.0 - smoothstep(crossWidth * 0.4, crossWidth * 1.6, abs(coord.x));
+                    float yMask = 1.0 - smoothstep(crossWidth * 0.4, crossWidth * 1.6, abs(coord.y));
+                    float crossGlow = max(xMask, yMask) * 0.25 * (1.0 - dist * 2.0);
+
+                    // 核心高光偏白粉色
+                    vec3 coreColor = vec3(1.0, 0.94, 0.97);
+                    vec3 finalColor = mix(vColor * glow, coreColor, core * 0.5) + vec3(crossGlow * 0.6);
+                    finalColor *= (0.85 + 0.2 * vGlow);
+
+                    // 深度雾效处理
+                    float fogFactor = smoothstep(1200.0, 5000.0, vDist);
+                    finalColor *= (1.0 - fogFactor * 0.5);
+
+                    float alpha = (glow * 0.88 + core * 0.2 + crossGlow * 0.3) * vAlpha * (1.0 - fogFactor * 0.4);
+                    gl_FragColor = vec4(finalColor, alpha);
+                }
+            `;
+
+            /**
+             * [Vertex Shader] 背景星空顶点着色器
+             */
+            const starfieldVertexShader = `
+                attribute float size;
+                attribute vec3 color;
+                attribute float phase;
+                uniform float uTime;
+                uniform float uPixelRatio;
+
+                varying vec3 vColor;
+                varying float vAlpha;
+
+                void main() {
+                    vColor = color;
+                    float twinkle = 0.55 + 0.45 * sin(uTime * 2.8 + phase);
+                    vAlpha = twinkle;
+
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    float depth = max(-mvPosition.z, 1.0);
+                    gl_PointSize = size * (750.0 / depth) * uPixelRatio;
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `;
+
+            /**
+             * [Fragment Shader] 背景恒星与微尘通用片元着色器 (十字星芒 + 辉光)
+             */
+            const commonFragmentShader = `
+                precision highp float;
+                varying vec3 vColor;
+                varying float vAlpha;
+
+                void main() {
+                    vec2 coord = gl_PointCoord - vec2(0.5);
+                    float dist = length(coord);
+                    if (dist > 0.5) discard;
+
+                    float glow = 1.0 - smoothstep(0.0, 0.5, dist);
+
+                    float crossWidth = 0.025;
+                    float xMask = 1.0 - smoothstep(crossWidth * 0.5, crossWidth * 1.5, abs(coord.x));
+                    float yMask = 1.0 - smoothstep(crossWidth * 0.5, crossWidth * 1.5, abs(coord.y));
+                    float crossGlow = max(xMask, yMask) * 0.35 * (1.0 - dist * 2.0);
+
+                    float finalAlpha = (glow * 0.8 + crossGlow) * vAlpha;
+                    gl_FragColor = vec4(vColor + vec3(crossGlow * 0.5), finalAlpha);
+                }
+            `;
+
+            /**
+             * [Vertex Shader] 环绕微光星尘顶点着色器 (漂移流转)
+             */
+            const dustVertexShader = `
+                uniform float uTime;
+                uniform float uPixelRatio;
+                attribute float size;
+                attribute vec3 color;
+                attribute float speed;
+                attribute float phase;
+
+                varying vec3 vColor;
+                varying float vAlpha;
+
+                void main() {
+                    vColor = color;
+
+                    // 空间漂移扰动
+                    vec3 pos = position;
+                    float t = uTime * speed + phase;
+                    pos.x += sin(t * 0.6) * 45.0;
+                    pos.y += cos(t * 0.8) * 40.0;
+                    pos.z += sin(t * 0.5 + phase) * 45.0;
+
+                    float pulse = 0.5 + 0.5 * sin(t * 1.5);
+                    vAlpha = 0.4 + 0.6 * pulse;
+
+                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                    float depth = max(-mvPosition.z, 1.0);
+                    gl_PointSize = size * (1200.0 / depth) * uPixelRatio;
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `;
+
+            /**
+             * [Vertex Shader] 核心发光恒星顶点着色器
+             */
+            const coreStarVertexShader = `
+                attribute float size;
+                uniform float uPixelRatio;
+                varying vec3 vColor;
+                varying float vAlpha;
+
+                void main() {
+                    vColor = vec3(1.0, 0.92, 0.96);
+                    vAlpha = 1.0;
+
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    gl_PointSize = size * 55.0 * uPixelRatio;
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `;
+
+            // ================== 3. Taubin 心形隐式方程二分数值求解器 ==================
+            /**
+             * Taubin 心形方程 (球坐标):
+             *   (r² - 1)³ = r⁵ · cos³θ · sin²θ · (cos²φ + 0.1·sin²φ)
+             * 令右侧常数项 C = cos³θ · sin²θ · (cos²φ + 0.1·sin²φ)
+             * 求解 f(r) = (r² - 1)³ - r⁵ · C = 0
+             */
+            function solveTaubinR(theta, phi) {
+                const sinT = Math.sin(theta), cosT = Math.cos(theta);
+                const sinP = Math.sin(phi), cosP = Math.cos(phi);
+                const C = cosT * cosT * cosT * sinT * sinT * (cosP * cosP + 0.1 * sinP * sinP);
+                const f = (r) => Math.pow(r * r - 1.0, 3) - Math.pow(r, 5) * C;
+
+                if (Math.abs(C) < 1e-14) return 1.0;
+
+                let rLo, rHi;
+                if (C > 0) {
+                    rLo = 1.0;
+                    rHi = 2.0;
+                    while (f(rHi) < 0 && rHi < 100.0) rHi *= 2.0;
+                } else {
+                    rLo = 1e-6;
+                    rHi = 1.0;
+                }
+
+                for (let i = 0; i < 50; i++) {
+                    const rMid = (rLo + rHi) * 0.5;
+                    const fm = f(rMid);
+                    if (Math.abs(fm) < 1e-12) return rMid;
+                    if (fm > 0.0) {
+                        rHi = rMid;
+                    } else {
+                        rLo = rMid;
+                    }
+                }
+                return (rLo + rHi) * 0.5;
+            }
+
+            // ================== 4. Three.js 场景与渲染器初始化 ==================
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(CONFIG.colors.background);
+            if (!isMobile) scene.fog = new THREE.FogExp2(CONFIG.colors.background, 0.00035);
+
+            const camera = new THREE.PerspectiveCamera(
+                55,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                15000,
+            );
+            camera.position.set(0, 150, 1450);
+
+            const renderer = new THREE.WebGLRenderer({
+                antialias: !isMobile,
+                alpha: false,
+                powerPreference: "high-performance",
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, CONFIG.pixelRatioLimit));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.15;
+            document.body.appendChild(renderer.domElement);
+
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 350;
+            controls.maxDistance = 4500;
+            controls.target.set(0, 40, 0);
+
+            if (isMobile) {
+                controls.rotateSpeed = 0.6;
+                controls.zoomSpeed = 0.6;
+            }
+
+            // ================== 5. 几何体工厂 ==================
+
+            /**
+             * 创建 Taubin 3D 数学心形粒子系统
+             */
+            let heartMaterial;
+            function createHeartGeometry() {
+                const positions = [], colors = [], phases = [], sizes = [];
+                const thetaSeg = CONFIG.heartTheta;
+                const phiSeg = CONFIG.heartPhi;
+                const scale = CONFIG.heartScale;
+
+                // 北极（顶部凹槽中心）
+                positions.push(0, 1.0 * scale, 0);
+                colors.push(1.0, 0.72, 0.82); // 亮白粉
+                phases.push(Math.random() * Math.PI * 2);
+                sizes.push(0.85 + Math.random() * 0.35);
+
+                for (let i = 1; i < thetaSeg - 1; i++) {
+                    const theta = (i / (thetaSeg - 1)) * Math.PI;
+                    for (let j = 0; j < phiSeg; j++) {
+                        const phi = (j / phiSeg) * Math.PI * 2;
+                        const r = solveTaubinR(theta, phi);
+
+                        const x = r * Math.sin(theta) * Math.cos(phi) * scale;
+                        const z = r * Math.sin(theta) * Math.sin(phi) * scale;
+                        const y = r * Math.cos(theta) * scale;
+
+                        const distXZ = Math.sqrt(x * x + z * z) / scale;
+                        const normY = (y / scale + 1.0) / 2.3;
+
+                        // 梦幻粉白至绯红体积渐变色彩映射
+                        const rCol = Math.min(1.0, 0.88 + 0.12 * Math.max(0.0, normY));
+                        const gCol = Math.min(1.0, 0.12 + 0.48 * Math.max(0.0, normY) + 0.12 * (1.0 - distXZ / 1.2));
+                        const bCol = Math.min(1.0, 0.22 + 0.38 * Math.max(0.0, normY) + 0.08 * (1.0 - distXZ / 1.2));
+
+                        positions.push(x, y, z);
+                        colors.push(rCol, gCol, bCol);
+                        phases.push(Math.random() * Math.PI * 2);
+                        sizes.push(0.75 + Math.random() * 0.5);
+                    }
+                }
+
+                // 南极（底部收尖尖端）
+                positions.push(0, -1.0 * scale, 0);
+                colors.push(0.85, 0.18, 0.32); // 浓郁绯红
+                phases.push(Math.random() * Math.PI * 2);
+                sizes.push(0.9 + Math.random() * 0.3);
+
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+                geometry.setAttribute("aColor", new THREE.Float32BufferAttribute(colors, 3));
+                geometry.setAttribute("aPhase", new THREE.Float32BufferAttribute(phases, 1));
+                geometry.setAttribute("aSize", new THREE.Float32BufferAttribute(sizes, 1));
+
+                heartMaterial = new THREE.ShaderMaterial({
+                    uniforms: {
+                        uTime: { value: 0.0 },
+                        uPulseSpeed: { value: CONFIG.pulseSpeed },
+                        uPulseAmp: { value: CONFIG.pulseAmp },
+                        uBaseSize: { value: CONFIG.baseHeartSize },
+                        uPixelRatio: { value: renderer.getPixelRatio() },
+                    },
+                    vertexShader: heartVertexShader,
+                    fragmentShader: heartFragmentShader,
+                    transparent: true,
+                    depthWrite: false,
+                    blending: THREE.AdditiveBlending,
+                });
+
+                return new THREE.Points(geometry, heartMaterial);
+            }
+
+            /**
+             * 创建背景深空星壳粒子系统
+             */
+            let starMaterial;
+            function createStarfield() {
+                const geometry = new THREE.BufferGeometry();
+                const count = CONFIG.starCount;
+                const positions = new Float32Array(count * 3);
+                const colors = new Float32Array(count * 3);
+                const sizes = new Float32Array(count);
+                const phases = new Float32Array(count);
+
+                const c1 = new THREE.Color(CONFIG.colors.star1);
+                const c2 = new THREE.Color(CONFIG.colors.star2);
+                const c3 = new THREE.Color(CONFIG.colors.star3);
+
+                for (let i = 0; i < count; i++) {
+                    const u = Math.random(), v = Math.random();
+                    const theta = 2 * Math.PI * u;
+                    const phi = Math.acos(2 * v - 1);
+                    const radius = CONFIG.bgRadiusMin + Math.random() * (CONFIG.bgRadiusMax - CONFIG.bgRadiusMin);
+
+                    positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+                    positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                    positions[i * 3 + 2] = radius * Math.cos(phi);
+
+                    let c = c3;
+                    const rand = Math.random();
+                    if (rand < 0.4) c = c2;
+                    else if (rand < 0.7) c = c1;
+
+                    const variation = 0.8 + Math.random() * 0.4;
+                    colors[i * 3] = c.r * variation;
+                    colors[i * 3 + 1] = c.g * variation;
+                    colors[i * 3 + 2] = c.b * variation;
+
+                    const distRatio = (radius - CONFIG.bgRadiusMin) / (CONFIG.bgRadiusMax - CONFIG.bgRadiusMin);
+                    sizes[i] = (12.0 + Math.random() * 22.0) * (1 - distRatio * 0.75);
+                    phases[i] = Math.random() * Math.PI * 2;
+                }
+
+                geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+                geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+                geometry.setAttribute("phase", new THREE.BufferAttribute(phases, 1));
+
+                starMaterial = new THREE.ShaderMaterial({
+                    uniforms: {
+                        uPixelRatio: { value: renderer.getPixelRatio() },
+                        uTime: { value: 0 },
+                    },
+                    vertexShader: starfieldVertexShader,
+                    fragmentShader: commonFragmentShader,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                });
+
+                return new THREE.Points(geometry, starMaterial);
+            }
+
+            /**
+             * 创建环绕心形的浮游星尘系统
+             */
+            let dustMaterial;
+            function createFloatingStardust() {
+                const geometry = new THREE.BufferGeometry();
+                const count = CONFIG.dustCount;
+                const positions = new Float32Array(count * 3);
+                const colors = new Float32Array(count * 3);
+                const sizes = new Float32Array(count);
+                const speeds = new Float32Array(count);
+                const phases = new Float32Array(count);
+
+                const cPink = new THREE.Color(CONFIG.colors.bgParticle);
+                const cWhite = new THREE.Color(CONFIG.colors.dustColor);
+                const cCyan = new THREE.Color(CONFIG.colors.star1);
+
+                for (let i = 0; i < count; i++) {
+                    const r = 250 + Math.random() * 650;
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos((Math.random() * 2) - 1);
+
+                    positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+                    positions[i * 3 + 1] = r * Math.cos(phi) * 1.1 + (Math.random() - 0.5) * 120;
+                    positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+
+                    let col = cPink;
+                    const rand = Math.random();
+                    if (rand < 0.45) col = cWhite;
+                    else if (rand < 0.6) col = cCyan;
+
+                    colors[i * 3] = col.r;
+                    colors[i * 3 + 1] = col.g;
+                    colors[i * 3 + 2] = col.b;
+
+                    sizes[i] = 4.0 + Math.random() * 9.0;
+                    speeds[i] = 0.4 + Math.random() * 0.8;
+                    phases[i] = Math.random() * Math.PI * 2;
+                }
+
+                geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+                geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+                geometry.setAttribute("speed", new THREE.BufferAttribute(speeds, 1));
+                geometry.setAttribute("phase", new THREE.BufferAttribute(phases, 1));
+
+                dustMaterial = new THREE.ShaderMaterial({
+                    uniforms: {
+                        uTime: { value: 0 },
+                        uPixelRatio: { value: renderer.getPixelRatio() },
+                    },
+                    vertexShader: dustVertexShader,
+                    fragmentShader: commonFragmentShader,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                });
+
+                return new THREE.Points(geometry, dustMaterial);
+            }
+
+            /**
+             * 创建中心核心发光体
+             */
+            let coreStarMaterial;
+            function createCoreStar() {
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array([0, 50, 0]), 3));
+                geometry.setAttribute("size", new THREE.BufferAttribute(new Float32Array([1.0]), 1));
+
+                coreStarMaterial = new THREE.ShaderMaterial({
+                    uniforms: { uPixelRatio: { value: renderer.getPixelRatio() } },
+                    vertexShader: coreStarVertexShader,
+                    fragmentShader: commonFragmentShader,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    depthTest: false,
+                });
+
+                return new THREE.Points(geometry, coreStarMaterial);
+            }
+
+            // 组装并添加所有粒子层至场景
+            const starfieldMesh = createStarfield();
+            const heartMesh = createHeartGeometry();
+            const dustMesh = createFloatingStardust();
+            const coreStarMesh = createCoreStar();
+
+            scene.add(starfieldMesh);
+            scene.add(heartMesh);
+            scene.add(dustMesh);
+            scene.add(coreStarMesh);
+
+            // ================== 6. 渲染循环与动画驱动 ==================
+            const clock = new THREE.Clock();
+            let isPaused = false;
+
+            function animate() {
+                if (document.hidden || isPaused) return;
+
+                const elapsedTime = clock.getElapsedTime();
+
+                // 更新 Uniform 时间参数
+                if (heartMaterial) heartMaterial.uniforms.uTime.value = elapsedTime;
+                if (starMaterial) starMaterial.uniforms.uTime.value = elapsedTime;
+                if (dustMaterial) dustMaterial.uniforms.uTime.value = elapsedTime;
+
+                // 心形自身优雅慢速自旋
+                heartMesh.rotation.y = elapsedTime * 0.08;
+                dustMesh.rotation.y = elapsedTime * 0.05;
+                dustMesh.rotation.x = Math.sin(elapsedTime * 0.04) * 0.05;
+
+                // 背景星空极为缓慢自旋
+                starfieldMesh.rotation.x -= 0.0001;
+                starfieldMesh.rotation.y += 0.00015;
+
+                controls.update();
+                renderer.render(scene, camera);
+
+                if (!finishLoadingCalled) finishLoading();
+            }
+
+            renderer.setAnimationLoop(animate);
+
+            // ================== 7. Loading 生命周期控制 ==================
+            const MIN_LOAD_TIME = 1800;
+            const loadStart = performance.now();
+            let loadingFinished = false,
+                finishLoadingCalled = false;
+
+            function finishLoading() {
+                if (finishLoadingCalled) return;
+                finishLoadingCalled = true;
+
+                const remain = Math.max(0, MIN_LOAD_TIME - (performance.now() - loadStart));
+
+                setTimeout(() => {
+                    const loader = document.getElementById("loader");
+                    if (loader) {
+                        loader.classList.add("hidden");
+                        setTimeout(() => {
+                            if (loader.parentNode) loader.parentNode.removeChild(loader);
+                        }, 900);
+                    }
+                    loadingFinished = true;
+                }, remain);
+            }
+
+            setTimeout(() => {
+                if (!loadingFinished) {
+                    const loader = document.getElementById("loader");
+                    if (loader && !loader.classList.contains("hidden")) {
+                        loader.innerHTML =
+                            '<div style="color:#ffd6e0;font-size:16px;text-align:center;padding-top:45vh;">加载超时，请刷新页面重试</div>';
+                    }
+                }
+            }, 10000);
+
+            window.addEventListener(
+                "error",
+                () => {
+                    const loader = document.getElementById("loader");
+                    if (loader && !loadingFinished) {
+                        loader.innerHTML =
+                            '<div style="color:#ff6b8a;font-size:16px;text-align:center;padding-top:45vh;">渲染出错，请刷新页面</div>';
+                    }
+                },
+                { once: true },
+            );
+
+            // 动态填充 Loading 背景中闪烁的小星星
+            const starsContainer = document.getElementById("stars");
+            for (let i = 0; i < 140; i++) {
+                const star = document.createElement("div");
+                star.className = "star";
+                const size = Math.random() * 2.5 + 0.6;
+                star.style.cssText = `
+                    width:${size}px;
+                    height:${size}px;
+                    left:${Math.random() * 100}%;
+                    top:${Math.random() * 100}%;
+                    background:${["#ff8fa3", "#ffd6e0", "#ffffff", "#aaddff"][Math.floor(Math.random() * 4)]};
+                    box-shadow:0 0 ${size * 2.2}px currentColor;
+                    --duration:${Math.random() * 2 + 1.2}s;
+                    animation-delay:${Math.random() * 3}s;
+                `;
+                starsContainer.appendChild(star);
+            }
+
+            // 页面可见性管理
+            document.addEventListener("visibilitychange", () => {
+                isPaused = document.hidden;
+                if (!isPaused) clock.start();
+            });
+
+            // 窗口尺寸自适应
+            window.addEventListener("resize", () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+                const pr = Math.min(window.devicePixelRatio, CONFIG.pixelRatioLimit);
+                renderer.setPixelRatio(pr);
+                [heartMaterial, starMaterial, dustMaterial, coreStarMaterial].forEach((mat) => {
+                    if (mat && mat.uniforms.uPixelRatio) mat.uniforms.uPixelRatio.value = pr;
+                });
+            });
+        </script>
+    </body>
+</html>
